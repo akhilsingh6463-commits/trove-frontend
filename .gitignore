@@ -1,6 +1,35 @@
-echo "node_modules/" >> .gitignore
-# Also add common patterns:
-echo ".env" >> .gitignore
-echo "dist/" >> .gitignore
-echo "build/" >> .gitignore
-echo ".DS_Store" >> .gitignore
+# Create/update .gitignore with these lines
+cat > .gitignore << EOF
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build
+dist/
+build/
+out/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+EOF
+
+# Then run this to clean already tracked files
+git rm -r --cached .
+git add .
+git commit -m "Update .gitignore and clean cache"
