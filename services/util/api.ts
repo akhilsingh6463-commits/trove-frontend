@@ -1,4 +1,14 @@
+import { Experience } from '../types';
+
 const PUBLIC_API_BASE = import.meta.env.VITE_PUBLIC_API_URL || 'http://localhost:5000';
+
+/* ===================== */
+/* 🔒 SHARED CACHE */
+/* ===================== */
+
+let experiencesCache: Experience[] | null = null;
+let experiencesPromise: Promise<Experience[]> | null = null;
+
 
 export interface PublicLocation {
   _id: string;
@@ -37,3 +47,54 @@ export const getPublicLocations = async (): Promise<ApiResponse<PublicLocation[]
     };
   }
 };
+
+export const getAllExperiences = async (
+  params?: {
+    location?: string;
+    date?: string;
+    search?: string;
+  }
+): Promise<Experience[]> => {
+
+  // ✅ If already fetched → reuse
+  if (experiencesCache) {
+    return experiencesCache;
+  }
+
+  // ✅ If fetch already in progress → reuse same promise
+  if (experiencesPromise) {
+    return experiencesPromise;
+  }
+
+  experiencesPromise = (async () => {
+    const query = params
+      ? new URLSearchParams(params as any).toString()
+      : '';
+
+    const res = await fetch(
+      `${PUBLIC_API_BASE}/api/experiences${query ? `?${query}` : ''}`,
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+
+    const json = await res.json();
+    experiencesCache = json.data || [];
+    experiencesPromise = null;
+
+    return experiencesCache;
+  })();
+
+  return experiencesPromise;
+};
+
+export const getExperienceById = async (
+  id: string
+): Promise<Experience | undefined> => {
+
+  // ✅ Use already-fetched experiences
+  if (!experiencesCache) {
+    await getAllExperiences();
+  }
+
+  return experiencesCache?.find(exp => exp._id === id);
+};
+
